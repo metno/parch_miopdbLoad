@@ -89,7 +89,7 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     dag <- row$DAG
     tim <- row$TIM
     prog <- row$PROG
-    validtime <- ISOdatetime(aar,mnd,dag,tim,0,0)
+    validtime <- ISOdatetime(aar,mnd,dag,tim,0,0,"GMT")
     if (is.na(validtime)){
       cat("Error, in validtime ",paste(unlist(row),collapse=" "), "row", i,"\n")
       return(FALSE)
@@ -118,7 +118,6 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
 
  # fastload - load into wdb
   if (!dryRun){
-    fastloadCommand <- paste("wdb-fastload -d",dbname,"-u",user,"-h",host, "--logfile fastload.log  <", fastloadFile)
     fastloadCommand <- paste("wdb-fastload -d",dbname,"-u",user,"-h",host, "<", fastloadFile)
     cat("system command",fastloadCommand,"\n")
     result <- system(fastloadCommand)
