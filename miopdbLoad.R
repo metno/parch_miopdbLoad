@@ -38,8 +38,8 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     return(FALSE)
   }
  # find data provider and stationid from 
-  model <- paste(tableElements[-lengthTableElements],collapse="_")
-  dataprovider<-dataproviderDefinitions[dataproviderDefinitions$model==model,]$dataprovider
+  tablemodelname <- paste(tableElements[-lengthTableElements],collapse="_")
+  dataprovider<-dataproviderDefinitions[dataproviderDefinitions$tablemodelname==tablemodelname,]$dataprovider
   if (length(dataprovider)==0){
       cat("Data provider not found for ", model,"\n")
       return(FALSE)
@@ -54,7 +54,7 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   # log onto miopdb and execute the command
   result <- system(sqlpluscommand)
   if (result !=0){
-    cat("system command",sqlplus,"failed\n")
+    cat("system command",sqlpluscommand,"failed\n")
     return(FALSE)
   }
   # sqlplus problem, we get several headers in the output file
