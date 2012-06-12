@@ -82,7 +82,14 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     cat("Wrong headers in sql file")
     return(FALSE)
   }
-  for (i in 1:nrow(df)){
+  nrows <- nrow(df)
+  validtimes <- c(NA)
+  length(validtimes) <- nrows
+  reftimes <- c(NA)
+  length(reftimes) <- nrows
+         
+  
+  for (i in 1:nrows){
     row <- df[i,]
     aar <- row$AAR
     mnd <- row$MND
@@ -96,25 +103,36 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     }
     timediff <- as.difftime(prog,units="hours")
     referencetime <- validtime-timediff
-    firstDataColumn <- 6
-    for (j in firstDataColumn:ncol(row)){
+
+    validtimes[i] <- format(validtime,"%Y-%m-%dT%H:%M:%S+00")
+    reftimes[i] <-format(referencetime,"%Y-%m-%dT%H:%M:%S+00")
+  }
+
+  firstDataColumn <- 6
+  for (j in firstDataColumn:ncol(df)){
      # get parameter name and defintions
-     par <- names(row)[j]
-     #print(par)
-     pdef <- parameterDefinitions[parameterDefinitions$miopdb_par==par,]
-     #print(pdef)     
-     # exit loop if unknown parameter
-     if (nrow(pdef)!=0) {
-       valueparametername <- as.character(pdef$valueparametername)
-       levelparametername <- as.character(pdef$levelparametername)
-       defaultlevel <- as.character(pdef$defaultlevel)
-       #TODO, check if defaultlevel to be used
-       level<-defaultlevel
-       value <- as.character(row[j])
-       cat(value, stationid,format(referencetime,"%Y-%m-%dT%H:%M:%S+00"),format(validtime,"%Y-%m-%dT%H:%M:%S+00"),format(validtime,"%Y-%m-%dT%H:%M:%S+00"), valueparametername, levelparametername, level,level,"\n",sep="\t",file=fastloadFile,append=T)
-     }
-   }
- }
+    col <- df[,j]
+    par <- names(df)[j]
+    #print(par)
+    pdef <- parameterDefinitions[parameterDefinitions$miopdb_par==par,]
+    # exit loop if unknown parameter
+    if (nrow(pdef)!=0) {
+      valueparametername <- as.character(pdef$valueparametername)
+      levelparametername <- as.character(pdef$levelparametername)
+      defaultlevel <- as.character(pdef$defaultlevel)
+      miopdb_unit<- as.character(pdef$miopdb_unit)
+      unit<- as.character(pdef$unit)
+      #TODO, check if defaultlevel to be used
+      level<-defaultlevel
+      if (!miopdb_unit==unit)
+        col <- ud.convert(col,miopdb_unit,unit)
+      for (i in 1:nrows){      
+        value <- as.character(col[i])
+        cat(value, stationid,reftimes[i],validtimes[i],validtimes[i], valueparametername, levelparametername, level,level,"\n",sep="\t",file=fastloadFile,append=T)
+      }
+    }
+  }
+
 
  # fastload - load into wdb
   if (!dryRun){

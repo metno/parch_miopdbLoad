@@ -1,12 +1,8 @@
 namespace <- "88,456,88"
 
-# define dataproviders
-models<-c("UM4KM1","HIRLAM8KM1")
-dataproviders <- c("um4","h8")
-names(dataproviders)<-models
-
 #define parameters
 parameterDefinitions <- read.table("parameters.conf",sep=",",header=TRUE,stringsAsFactors=FALSE)
+# define dataproviders
 dataproviderDefinitions<- read.table("dataproviders.conf",sep=",",header=TRUE,stringsAsFactors=FALSE)
 
 #wdb stuff
