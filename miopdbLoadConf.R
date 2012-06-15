@@ -12,5 +12,5 @@ user <- "wdb"
 host <- "wdb-dev3"
 
 #command to log onto sqlplus and run sql.ctl
-sqlpluscommand <- "sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
-#sqlpluscommand <- "/opt/instantclient_11_2/sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
+#sqlpluscommand <- "sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
+sqlpluscommand <- "/opt/instantclient_11_2/sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"

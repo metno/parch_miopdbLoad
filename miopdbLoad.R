@@ -52,7 +52,7 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   headerFile<- paste(tableName,".head",sep="")
   dataFile <- paste(tableName,".dat",sep="")
   # log onto miopdb and execute the command
- # result <- system(sqlpluscommand)
+  result <- system(sqlpluscommand)
   if (result !=0){
     cat("system command",sqlpluscommand,"failed\n")
     return(FALSE)
@@ -86,7 +86,6 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   # first column with data or (NIVA)
   firstDataColumn <- 6
 
-
   useGroundLevel <- TRUE
   # check if level (ie NIVA) given
   # if level is given it is in the first Data column
@@ -97,11 +96,12 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     firstDataColumn <- firstDataColumn+1
     useGroundLevel <- FALSE
     levelparametername <- as.character(pdef$levelparametername)
+    miopdb_levelunit<- as.character(pdef$miopdb_unit)
+    levelunit<- as.character(pdef$unit)
   }
 
   
   nrows <- nrow(df)
-  nrows <- 10
   validtimes <- c(NA)
   length(validtimes) <- nrows
   reftimes <- c(NA)
@@ -111,7 +111,6 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   
   for (i in 1:nrows){
     row <- df[i,]
-    print(row)
     aar <- row$AAR
     mnd <- row$MND
     dag <- row$DAG
@@ -129,13 +128,17 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     reftimes[i] <-format(referencetime,"%Y-%m-%dT%H:%M:%S+00")
 
     if (!useGroundLevel){
-      levels[i] <- row$NIVA
+      levels[i] <- as.character(row$NIVA)
     }
     
   }
 
   # convert levels
-  
+  if(!useGroundLevel){
+    if (!is.na(levelunit)&&!miopdb_levelunit==levelunit)
+    levels <- ud.convert(levels,miopdb_levelunit,levelunit)
+  }
+
   for (j in firstDataColumn:ncol(df)){
      # get parameter name and defintions
     col <- df[,j]
