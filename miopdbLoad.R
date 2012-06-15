@@ -41,7 +41,7 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   tablemodelname <- paste(tableElements[-lengthTableElements],collapse="_")
   dataprovider<-dataproviderDefinitions[dataproviderDefinitions$tablemodelname==tablemodelname,]$dataprovider
   if (length(dataprovider)==0){
-      cat("Data provider not found for ", model,"\n")
+      cat("Data provider not found for ", tablemodelname,"\n")
       return(FALSE)
     }
   cat("The dataprovider is", dataprovider,"\n")
@@ -52,7 +52,7 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   headerFile<- paste(tableName,".head",sep="")
   dataFile <- paste(tableName,".dat",sep="")
   # log onto miopdb and execute the command
-  result <- system(sqlpluscommand)
+ # result <- system(sqlpluscommand)
   if (result !=0){
     cat("system command",sqlpluscommand,"failed\n")
     return(FALSE)
@@ -82,15 +82,36 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     cat("Wrong headers in sql file")
     return(FALSE)
   }
+
+  # first column with data or (NIVA)
+  firstDataColumn <- 6
+
+
+  useGroundLevel <- TRUE
+  # check if level (ie NIVA) given
+  # if level is given it is in the first Data column
+  par <- names(df)[firstDataColumn]
+  pdef <- levelParameterDefinitions[levelParameterDefinitions$miopdb_par==par,]
+  if (nrow(pdef)!=0) {
+    cat("Level is given\n")
+    firstDataColumn <- firstDataColumn+1
+    useGroundLevel <- FALSE
+    levelparametername <- as.character(pdef$levelparametername)
+  }
+
+  
   nrows <- nrow(df)
+  nrows <- 10
   validtimes <- c(NA)
   length(validtimes) <- nrows
   reftimes <- c(NA)
   length(reftimes) <- nrows
-         
+  levels <- c(NA)
+  length(levels) <- nrows
   
   for (i in 1:nrows){
     row <- df[i,]
+    print(row)
     aar <- row$AAR
     mnd <- row$MND
     dag <- row$DAG
@@ -106,9 +127,15 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
 
     validtimes[i] <- format(validtime,"%Y-%m-%dT%H:%M:%S+00")
     reftimes[i] <-format(referencetime,"%Y-%m-%dT%H:%M:%S+00")
+
+    if (!useGroundLevel){
+      levels[i] <- row$NIVA
+    }
+    
   }
 
-  firstDataColumn <- 6
+  # convert levels
+  
   for (j in firstDataColumn:ncol(df)){
      # get parameter name and defintions
     col <- df[,j]
@@ -118,15 +145,21 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     # exit loop if unknown parameter
     if (nrow(pdef)!=0) {
       valueparametername <- as.character(pdef$valueparametername)
-      levelparametername <- as.character(pdef$levelparametername)
-      defaultlevel <- as.character(pdef$defaultlevel)
+      if (useGroundLevel){
+        # use default level for this parameter
+        levelparametername <- as.character(pdef$groundlevelparametername)
+        level <- as.character(pdef$groundlevel)
+      } 
+                    
       miopdb_unit<- as.character(pdef$miopdb_unit)
       unit<- as.character(pdef$unit)
-      #TODO, check if defaultlevel to be used
-      level<-defaultlevel
-      if (!miopdb_unit==unit)
+   
+      if (!is.na(unit)&&!miopdb_unit==unit)
         col <- ud.convert(col,miopdb_unit,unit)
       for (i in 1:nrows){      
+        if (!useGroundLevel){
+          level <- levels[i]
+        }
         value <- as.character(col[i])
         cat(value, stationid,reftimes[i],validtimes[i],validtimes[i], valueparametername, levelparametername, level,level,"\n",sep="\t",file=fastloadFile,append=T)
       }
