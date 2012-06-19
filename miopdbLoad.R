@@ -89,8 +89,8 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   useGroundLevel <- TRUE
   # check if level (ie NIVA) given
   # if level is given it is in the first Data column
-  par <- names(df)[firstDataColumn]
-  pdef <- levelParameterDefinitions[levelParameterDefinitions$miopdb_par==par,]
+  levelpar <- names(df)[firstDataColumn]
+  pdef <- levelParameterDefinitions[levelParameterDefinitions$miopdb_par==levelpar,]
   if (nrow(pdef)!=0) {
     cat("Level is given\n")
     firstDataColumn <- firstDataColumn+1
@@ -128,7 +128,7 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     reftimes[i] <-format(referencetime,"%Y-%m-%dT%H:%M:%S+00")
 
     if (!useGroundLevel){
-      levels[i] <- as.character(row$NIVA)
+      levels[i] <- as.character(row[levelpar])
     }
     
   }

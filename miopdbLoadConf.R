@@ -1,4 +1,3 @@
-namespace <- "88,456,88"
 
 #define parameters
 parameterDefinitions <- read.table("parameters.conf",sep=",",header=TRUE,stringsAsFactors=FALSE)
@@ -10,6 +9,7 @@ dataproviderDefinitions<- read.table("dataproviders.conf",sep=",",header=TRUE,st
 dbname <- "wdb"
 user <- "wdb"
 host <- "wdb-dev3"
+namespace <- "88,456,88"
 
 #command to log onto sqlplus and run sql.ctl
 #sqlpluscommand <- "sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
