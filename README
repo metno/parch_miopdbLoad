@@ -1,0 +1,36 @@
+parch_miopdbLoad
+================
+R-scripts for loading data from met.no oracle database into a wdb-database
+
+migrating data from miopdb:
+---------------------------
+source("miopdbLoad.R")
+migration of all tables in a model: f.ex. testMiopdbModelLoad("HIRLAM2")
+migration for one table: f.ex. testMiopdbTableLoad("HIRLAM2_1010"), tablename in miopdb
+(tablename in miopdb is modelname_stationname)
+
+testing migration:
+------------------
+source("testMiopdbLoad.R")
+test migration of all tables in a model: f.ex. testMiopdbModelLoad("HIRLAM2")
+test migration for one table: f.ex. testMiopdbTableLoad("HIRLAM2_1010"), tablename in miopdb
+
+
+conf-files
+----------
+dataproviders.conf
+parameters.conf
+levelparameters.conf
+
+Dependencies
+-----------
+sqlplus
+fastload
+wdb2R
+
+R-packages
+-------
+udunits
+miIO
+DBI
+RpostGresql
