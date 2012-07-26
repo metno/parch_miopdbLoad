@@ -164,7 +164,8 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
           level <- levels[i]
         }
         value <- as.character(col[i])
-        cat(value, stationid,reftimes[i],validtimes[i],validtimes[i], valueparametername, levelparametername, level,level,"\n",sep="\t",file=fastloadFile,append=T)
+	if (!is.na(value))	
+          cat(value, stationid,reftimes[i],validtimes[i],validtimes[i], valueparametername, levelparametername, level,level,"\n",sep="\t",file=fastloadFile,append=T)
       }
     }
   }

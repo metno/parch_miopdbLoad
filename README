@@ -5,8 +5,8 @@ R-scripts for loading data from met.no oracle database into a wdb-database
 migrating data from miopdb:
 ---------------------------
 source("miopdbLoad.R")
-migration of all tables in a model: f.ex. testMiopdbModelLoad("HIRLAM2")
-migration for one table: f.ex. testMiopdbTableLoad("HIRLAM2_1010"), tablename in miopdb
+migration of all tables in a model: f.ex. miopdbModelLoad("HIRLAM2")
+migration for one table: f.ex. miopdbTableLoad("HIRLAM2_1010"), tablename in miopdb
 (tablename in miopdb is modelname_stationname)
 
 testing migration:

@@ -8,8 +8,8 @@ dataproviderDefinitions<- read.table("dataproviders.conf",sep=",",header=TRUE,st
 #wdb stuff
 dbname <- "wdb"
 user <- "wdb"
-host <- "wdb-dev3"
-namespace <- "88,456,88"
+host <- "wdb-dev2"
+namespace <- "88,88001,88"
 
 #command to log onto sqlplus and run sql.ctl
 sqlpluscommand <- "sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"

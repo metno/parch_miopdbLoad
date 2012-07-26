@@ -11,7 +11,7 @@ source("createSqlFile.R")
 source("../wdb2R/readVerifWdb.R")
 # set startyear and endyear
 startyear <- 1996
-endyear <- 1996
+endyear <- 1997
 startedup <- FALSE
 errorfile <- "testMiopdbLoad.out"
 errorcount <-0
@@ -234,8 +234,8 @@ compareMiopdbWdb <- function(tableName,tableInfo,validyear){
        }
    }
      if (!is.null(errorstring)){
-       print(head(miopdb.data))
-       print(head(wdb.data))
+       print((miopdb.data))
+       print((wdb.data))
      }
    }
 
@@ -480,6 +480,8 @@ getProgs <- function(tableName){
   proglist<-scan(tableProgFile,what=list(prog=integer()))
   progs<-proglist$prog
   progs<-progs[progs!=0]
+# only progs that are multiples of 3
+  progs<-progs[progs%%3==0]	
 }
 
   
