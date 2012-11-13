@@ -72,7 +72,7 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   }
 
  # write to file for fastload, names tableName.load
-  fastloadFile <- paste(tableName,".load",sep="")
+  fastloadFile <- paste(datadir,tableName,".load",sep="")
   cat(paste(dataprovider,namespace,"\n",sep="\t"), file=fastloadFile)
  # todo deal with NA values, not factor
   headers<-read.table(headerFile,sep="",header=TRUE)
@@ -180,10 +180,11 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
       cat("system command",fastloadCommand,"failed.\n")
       return(FALSE)
     }
+
+  }
     # remove all files no longer needed
     removeFileCommand <- paste("rm ",tableName,".*",sep="")
     system(removeFileCommand)
-  }
   return(TRUE)
 }
 
@@ -197,7 +198,7 @@ createModelSqlFile <- function(modelName){
 }
 
 createTableSqlFile <- function(tableName){
-  tableOutputFile <- paste(tableName,".out",sep="")
+  tableOutputFile <- paste(datadir,tableName,".out",sep="")
   tableQuery <- createTableQuery(tableName)
   #print(tableOutputFile)
   createSqlFile(tableQuery,tableOutputFile,TRUE)

@@ -1,7 +1,7 @@
 library(DBI)
 library(RPostgreSQL)
 # miIO, internal met.no package for Input/output
-library(miIO,lib.loc="/fou/atmos/R-packages/lucid")
+library(miIO)
 
 source("miopdbLoadConf.R")
 source("miopdbLoad.R")
@@ -90,8 +90,8 @@ testMiopdbTableLoad <- function(tableName,append=FALSE){
   shortmodelname <- tableInfo$shortmodelname
   stationid <- tableInfo$stationid
 
-  if (bugFound(stationid)==TRUE)
-    return(FALSE)
+#  if (bugFound(stationid)==TRUE)
+#    return(FALSE)
     
   okToProceed <- TRUE
   if (testTotal){
@@ -426,7 +426,7 @@ getTableInfo <- function(tableName){
   print(results)
   if (results[1,1]>1){
     sink(errorfile,append=TRUE,split=TRUE)
-    cat("Failure when checking table, ", tableName,".",results[1,1], "placename results \n")
+    cat("Failure when checking table, ", stationid,".",results[1,1], "placename results \n")
     sink()
     return(TRUE)
   }

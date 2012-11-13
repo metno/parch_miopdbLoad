@@ -12,5 +12,8 @@ host <- "wdb-dev2"
 namespace <- "88,88001,88"
 
 #command to log onto sqlplus and run sql.ctl
-sqlpluscommand <- "sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
+sqlpluscommand <- "sqlplus64 -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
 #sqlpluscommand <- "/opt/instantclient_11_2/sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
+
+# directory for datafiles
+datadir <- "/disk1/data/parch/"
