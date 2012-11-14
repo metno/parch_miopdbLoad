@@ -7,7 +7,8 @@ readExportStations <- function(filename){
 }
 
 miopdbModelLoad <- function(modelName,dryRun=TRUE){
-# list all tables for this model(one table for each station)
+  readExportStations(exportFile)
+ # list all tables for this model(one table for each station)
   modelOutputFile <- createModelSqlFile(modelName)
   system(sqlpluscommand)
   # Read list of all the table names
@@ -28,7 +29,6 @@ miopdbModelLoad <- function(modelName,dryRun=TRUE){
   removeFileCommand <- paste("rm ",modelOutputFile,sep="")
   system(removeFileCommand)
   system("rm sql.ctl")
-  readExportStations(exportFile)
 }
 
 
