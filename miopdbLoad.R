@@ -2,6 +2,10 @@ library(udunits2)
 source("miopdbLoadConf.R")
 source("createSqlFile.R")
 
+readExportStations <- function(filename){
+  exportStations<<-read.table(filename, sep=",",head=TRUE,fill=TRUE,stringsAsFactors=FALSE,strip.white=TRUE)
+}
+
 miopdbModelLoad <- function(modelName,dryRun=TRUE){
 # list all tables for this model(one table for each station)
   modelOutputFile <- createModelSqlFile(modelName)
@@ -24,7 +28,7 @@ miopdbModelLoad <- function(modelName,dryRun=TRUE){
   removeFileCommand <- paste("rm ",modelOutputFile,sep="")
   system(removeFileCommand)
   system("rm sql.ctl")
-
+  readExportStations(exportFile)
 }
 
 
@@ -37,7 +41,15 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     cat("Non numeric stationid in table ", tableName,"\n")
     return(FALSE)
   }
- # find data provider and stationid from 
+  exportStation <- exportStations[exportStations$synop==stationid,]
+  if (nrow(exportStation)==0){
+   cat("this station not to be exported\n")
+   return(FALSE)
+ }
+  geom <- tolower(exportStation$geom)
+  fromtime <- strptime(exportStation$fromtime,"%Y-%m-%d")
+  station.fromtime <- format(fromtime,"%Y-%m-%dT%H:%M:%S+00")
+  # find data provider and stationid from 
   tablemodelname <- paste(tableElements[-lengthTableElements],collapse="_")
   dataprovider<-dataproviderDefinitions[dataproviderDefinitions$tablemodelname==tablemodelname,]$dataprovider
   if (length(dataprovider)==0){
@@ -46,7 +58,8 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
     }
   cat("The dataprovider is", dataprovider,"\n")
   cat("The station is", stationid,"\n")
-
+  print(geom)
+  print(station.fromtime)
   tableOutputFile <- createTableSqlFile(tableName)
  # create an sql file, sql.ctl for downloading table to file tableOutputFile
   headerFile<- paste(tableName,".head",sep="")
@@ -164,8 +177,13 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
           level <- levels[i]
         }
         value <- as.character(col[i])
-	if (!is.na(value))	
-          cat(value, stationid,reftimes[i],validtimes[i],validtimes[i], valueparametername, levelparametername, level,level,"\n",sep="\t",file=fastloadFile,append=T)
+        if (useGeom)
+          placename <-geom
+        else
+          placename <-stationid
+        # here we check that the reftime is later than the earliest time to record data
+	if (!is.na(value) && reftimes[i]>station.fromtime)	
+          cat(value, placename,reftimes[i],validtimes[i],validtimes[i], valueparametername, levelparametername, level,level,"\n",sep="\t",file=fastloadFile,append=T)
       }
     }
   }
