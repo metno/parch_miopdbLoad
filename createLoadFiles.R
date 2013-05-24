@@ -4,6 +4,6 @@ selectedmodels <-c("HIRLAM1","PARLAM10","HIRLAM20KM1","HIRLAM4KM1","HIRLAM8KM1",
 
 for (i in 1:length(selectedmodels)){
   miopdbModelLoad(selectedmodels[i])
-  gzipcommand <- paste("gzip ",datadir,selectedmodels[i],"_*;",sep="")
-  system(gzipcommand)
 }
+
+

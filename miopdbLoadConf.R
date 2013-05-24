@@ -1,4 +1,3 @@
-
 #define parameters
 parameterDefinitions <- read.table("parameters.conf",sep=",",header=TRUE,stringsAsFactors=FALSE)
 levelParameterDefinitions <- read.table("levelparameters.conf",sep=",",header=TRUE,stringsAsFactors=FALSE)
@@ -12,7 +11,7 @@ useGeom <- FALSE
 #wdb stuff
 dbname <- "wdb"
 user <- "wdb"
-host <- "wdb-dev2"
+host <- "wdb-dev3"
 namespace <- "88,42,88"
 
 
@@ -20,5 +19,8 @@ namespace <- "88,42,88"
 sqlpluscommand <- "sqlplus64 -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
 #sqlpluscommand <- "/opt/instantclient_11_2/sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
 
-# directory for datafiles
-datadir <- "/disk1/data/parch/"
+
+# directory for outfiles
+outdir <- "/disk1/data/parch/out/2012/"
+# directory for loadfiles
+loaddir <- "/disk1/data/parch/load/2012/"

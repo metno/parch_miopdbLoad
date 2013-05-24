@@ -8,10 +8,10 @@ source("miopdbLoad.R")
 source("createSqlFile.R")
 
 # wdb2R, download from  git://github.com/wdb/wdb2R.git
-source("../wdb2R/readVerifWdb.R")
+#source("../wdb2R/readVerifWdb.R")
 # set startyear and endyear
-startyear <- 1996
-endyear <- 1997
+startyear <- 1995
+endyear <- 2012
 startedup <- FALSE
 errorfile <- "testMiopdbLoad.out"
 errorcount <-0
@@ -38,6 +38,69 @@ startup<-function(){
   startedup <<- TRUE
 }
 
+
+testFilesLoaded <- function(modelName){
+  startup()
+  readExportStations(exportFile)
+#simple test to check files loaded into wdb and if correct number, writes wiki style file
+  # first list files
+  modelOutputFile <- paste(modelName,".out",sep="")
+  listmodelfiles <- paste("ls ",outdir,modelName,"/",modelName,"_*.out  >", modelOutputFile,sep="")
+  print(modelOutputFile)
+  print(listmodelfiles)
+  result <- system(listmodelfiles)
+  if (result !=0){
+    cat("system command",listmodelfiles,"failed\n")
+    return(FALSE)
+  }
+   # Read list of all the table names
+  tablefileList<-scan(modelOutputFile,what=list(tablefile=character()))
+ # vector with table names
+  tablefileVector<-tablefileList$tablefile
+  outputfile <- paste(modelName,"-result.txt",sep="")
+  sink(outputfile,append=FALSE,split=TRUE)
+  for (i in 1:length(tablefileVector)){
+    cat('|', basename(tablefileVector[i]),'|')
+    wccommand <- paste("wc -l < ",  tablefileVector[i])
+    wc<-system(wccommand,intern=TRUE)
+    cat(wc)
+    tableName <-  tableNameFromTableFilename(tablefileVector[i])
+    fastloadFile <- paste(loaddir,modelName,"/" ,tableName,".load",sep="")
+    cat('|', basename(fastloadFile),'|')
+    wccommand <- paste("wc -l < ",  fastloadFile)
+    result<-system(wccommand)
+    if (result==0)
+      wc<-system(wccommand,intern=TRUE)
+    else
+      wc==0
+    cat(wc)
+    sink()
+    tableInfo <- getTableInfo(tableName)
+    if(length(tableInfo)==0)
+      return(FALSE)
+    dataprovider <- tableInfo$dataprovider
+    shortmodelname <- tableInfo$shortmodelname
+    stationid <- tableInfo$stationid
+    levels <- c(NA)
+    wdbcount <- getWdbCount(NULL, dataprovider,stationid,c(startyear,endyear),levels)
+    sink(outputfile,append=TRUE,split=TRUE)
+    if ((as.integer(wc)-as.integer(wdbcount))==1)
+      ok="YES"
+    else
+      ok="**NO**"
+    cat('|',wdbcount,'|',ok ,'|')
+    exportStation <- exportStations[exportStations$synop==stationid,]
+    if (nrow(exportStation)!=0){
+      fromtime <- strptime(exportStation$fromtime,"%Y-%m-%d")     
+      station.fromtime <- format(fromtime,"%Y-%m-%dT%H:%M:%S+00")
+    }
+    cat(station.fromtime)
+    cat('|\n');
+
+
+  }
+  sink()
+}
 
 testMiopdbModelLoad <- function(modelName){
   modelOK <- TRUE
@@ -244,7 +307,7 @@ compareMiopdbWdb <- function(tableName,tableInfo,validyear){
 
  getWdbCount <- function(parameter,dataprovider,stationid,validyear,levels){
 
-   cat("getWdbCount", parameter,"\n")  
+   cat("getWdbCount", parameter, dataprovider,stationid,validyear, levels, "\n")  
 
    #check if OK parameter
    pdef <- parameterDefinitions[parameterDefinitions$miopdb_par==parameter,]

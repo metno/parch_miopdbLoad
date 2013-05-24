@@ -6,7 +6,9 @@ readExportStations <- function(filename){
   exportStations<<-read.table(filename, sep=",",head=TRUE,fill=TRUE,stringsAsFactors=FALSE,strip.white=TRUE)
 }
 
-miopdbModelLoad <- function(modelName,dryRun=TRUE){
+
+miopdbModelOut <- function(modelName){
+ # produce .out files (from miopdb)
   readExportStations(exportFile)
  # list all tables for this model(one table for each station)
   modelOutputFile <- createModelSqlFile(modelName)
@@ -15,24 +17,26 @@ miopdbModelLoad <- function(modelName,dryRun=TRUE){
   tablenameList<-scan(modelOutputFile,what=list(tablename=character()))
  # vector with table names
  tablenameVector<-tablenameList$tablename
+
   for (i in 1:length(tablenameVector)){
-   if (miopdbTableLoad(tablenameVector[i],dryRun)){
-      if (dryRun)
-        cat("dry run,", tablenameVector[i], "not loaded\n")
-      else
-        cat(tablenameVector[i], "loaded\n")
-    }
-    else{
-      cat("error,",tablenameVector[i], "not loaded\n")
-    }
+    if (miopdbTableOut(tablenameVector[i])){
+     cat(tablenameVector[i], "produced .out file\n")
+   } else {
+     cat("error,",tablenameVector[i], "no .out\n")
+   }
+    
   }
+ll 
+  
   removeFileCommand <- paste("rm ",modelOutputFile,sep="")
   system(removeFileCommand)
   system("rm sql.ctl")
 }
 
 
-miopdbTableLoad <- function(tableName,dryRun=TRUE){
+
+miopdbTableOut <- function(tableName){
+  cat("miopdbTableOut",tableName,"\n")
   tableElements <- unlist(strsplit(tableName,"_"))
   lengthTableElements <- length(tableElements)
   # assume stationid is everything after the last underscore
@@ -46,12 +50,101 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
    cat("this station not to be exported\n")
    return(FALSE)
  }
+  tableOutputFile <- createTableSqlFile(tableName)
+ # create an sql file, sql.ctl for downloading table to file tableOutputFile
+  headerFile<- paste(tableName,".head",sep="")
+  dataFile <- paste(tableName,".dat",sep="")
+  # log onto miopdb and execute the command
+  cat (sqlpluscommand,"\n")
+  result <- system(sqlpluscommand)
+  if (result !=0){
+    cat("system command",sqlpluscommand,"failed\n")
+    return(FALSE)
+  }
+  return(TRUE)
+}
+
+
+
+
+miopdbModelLoad <- function(modelName,dryRun=TRUE){
+  readExportStations(exportFile)
+ # list all tables for this model(one table for each station)
+  modelOutputFile <- paste(loaddir,modelName,"/",modelName,".out",sep="")
+  listmodelfiles <- paste("ls ",outdir,modelName,"/",modelName,"_*.out  >", modelOutputFile,sep="")
+  print(modelOutputFile)
+  print(listmodelfiles)
+  result <- system(listmodelfiles)
+  if (result !=0){
+    cat("system command",listmodelfiles,"failed\n")
+    return(FALSE)
+  }
+ # Read list of all the table names
+ tablefileList<-scan(modelOutputFile,what=list(tablefile=character()))
+ # vector with table names
+ tablefileVector<-tablefileList$tablefile
+  for (i in 1:length(tablefileVector)){
+   if (miopdbTableLoad(tablefileVector[i],dryRun)){
+      if (dryRun)
+        cat("dry run,", tablefileVector[i], "not loaded\n")
+      else
+        cat(tablefileVector[i], "loaded\n")
+    }
+    else{
+      cat("error,",tablefileVector[i], "not loaded\n")
+    }
+  }
+  removeFileCommand <- paste("rm ",modelOutputFile,sep="")
+  system(removeFileCommand)
+}
+
+
+
+tableNameFromTableFilename <-function(tableFilename){
+  #print(tableFilename)
+  filename <- basename(tableFilename)
+  #print(filename)
+  # filename is of the form HIRLAM1_1003.out
+  #split filename at .
+  filenameElements <- unlist(strsplit(filename,"\\."))
+  if (length(filenameElements)>0){
+    #print(filenameElements[1]) 
+    return (filenameElements[1])
+  }
+  return("")
+}
+
+
+miopdbTableLoad <- function(tableFilename,dryRun=TRUE){
+  tableName <-  tableNameFromTableFilename(tableFilename)
+  print(tableName)
+  #now we have name of the form HIRLAM1_1003 (extract stationid from this)
+  tableElements <- unlist(strsplit(tableName,"_"))
+  lengthTableElements <- length(tableElements)
+
+  # assume modelname is everything before the last underscore
+  tablemodelName <- paste(tableElements[-lengthTableElements],collapse="_")
+  # assume stationid is everything after the last underscore
+  stationid <- tableElements[lengthTableElements]
+  print(stationid)
+  if (is.na(as.numeric(stationid))){
+    cat("Non numeric stationid in table ", tableName,"\n")
+    return(FALSE)
+  }
+
+
+  exportStation <- exportStations[exportStations$synop==stationid,]
+  if (nrow(exportStation)==0){
+   cat("this station not to be exported\n")
+   return(FALSE)
+ }
   geom <- tolower(exportStation$geom)
   fromtime <- strptime(exportStation$fromtime,"%Y-%m-%d")
   station.fromtime <- format(fromtime,"%Y-%m-%dT%H:%M:%S+00")
   # find data provider and stationid from 
-  tablemodelname <- paste(tableElements[-lengthTableElements],collapse="_")
-  dataprovider<-dataproviderDefinitions[dataproviderDefinitions$tablemodelname==tablemodelname,]$dataprovider
+
+  
+  dataprovider<-dataproviderDefinitions[dataproviderDefinitions$tablemodelname==tablemodelName,]$dataprovider
   if (length(dataprovider)==0){
       cat("Data provider not found for ", tablemodelname,"\n")
       return(FALSE)
@@ -60,34 +153,36 @@ miopdbTableLoad <- function(tableName,dryRun=TRUE){
   cat("The station is", stationid,"\n")
   print(geom)
   print(station.fromtime)
-  tableOutputFile <- createTableSqlFile(tableName)
- # create an sql file, sql.ctl for downloading table to file tableOutputFile
+
+  #split headers and data
   headerFile<- paste(tableName,".head",sep="")
   dataFile <- paste(tableName,".dat",sep="")
-  # log onto miopdb and execute the command
-  result <- system(sqlpluscommand)
-  if (result !=0){
-    cat("system command",sqlpluscommand,"failed\n")
-    return(FALSE)
-  }
   # sqlplus problem, we get several headers in the output file
-  grepheaders <- paste("grep \"AAR\"",tableOutputFile," >", headerFile)
+  grepheaders <- paste("grep \"AAR\"",tableFilename," >", headerFile)
   result <- system(grepheaders)
   if (result !=0){
     cat("system command",grepheaders,"failed\n")
     return(FALSE)
   }
-  grepnoheaders <- paste("grep -v \"AAR\"",tableOutputFile," >", dataFile)
-  resut <- system(grepnoheaders)
+  grepnoheaders <- paste("grep -v \"AAR\"",tableFilename," >", dataFile)
+  result <- system(grepnoheaders)
   if (result !=0){
     cat("system command",grepnoheaders,"failed\n")
     return(FALSE)
   }
-
+  #sort datafile to get rid of duplicate lines
+  sortcommand <- paste("sort -u -o",dataFile,dataFile)
+  cat(sortcommand,"\n")
+  result <- system(sortcommand)
+  if (result !=0){
+    cat("system command",sortcommand,"failed\n")
+    return(FALSE)
+  }
  # write to file for fastload, names tableName.load
-  fastloadFile <- paste(datadir,tableName,".load",sep="")
+  fastloadFile <- paste(loaddir,tablemodelName,"/",tableName,".load",sep="")
   cat(paste(dataprovider,namespace,"\n",sep="\t"), file=fastloadFile)
- # todo deal with NA values, not factor
+
+  # todo deal with NA values, not factor
   headers<-read.table(headerFile,sep="",header=TRUE)
   df<-read.table(dataFile,sep="",header=FALSE)
   names(df)<-names(headers)
@@ -216,7 +311,7 @@ createModelSqlFile <- function(modelName){
 }
 
 createTableSqlFile <- function(tableName){
-  tableOutputFile <- paste(datadir,tableName,".out",sep="")
+  tableOutputFile <- paste(outdir,tableName,".out",sep="")
   tableQuery <- createTableQuery(tableName)
   #print(tableOutputFile)
   createSqlFile(tableQuery,tableOutputFile,TRUE)
@@ -227,7 +322,7 @@ createTableSqlFile <- function(tableName){
 createTableQuery <- function(tableName){
   if (missing(tableName)) 
         stop(" ==>  table name(s)  not specified.")
-  tableQuery <- paste("select * from verifop.",tableName,";\n",sep="")
+  tableQuery <- paste("select * from verifop.",tableName," where aar < 2013;\n",sep="")
   #print(tableQuery)
   return(tableQuery)
 }
@@ -242,3 +337,39 @@ createModelQuery <- function(modelName){
   return(modelQuery)
 }
 
+
+miopdbFastload <- function(modelName){
+  modelLoadListFile <- paste(loaddir,modelName,".list",sep="")
+  listloadfiles <- paste("ls ",loaddir, modelName,"/",modelName,"_*.load  >", modelLoadListFile,sep="")
+  print(modelLoadListFile)
+  print(listloadfiles)
+  result <- system(listloadfiles)
+  if (result !=0){
+    cat("system command",listloadfiles,"failed\n")
+    return(FALSE)
+  }
+ # Read list of all the table names
+ tablefileList<-scan(modelLoadListFile,what=list(tablefile=character()))
+ # vector with table names
+ tablefileVector<-tablefileList$tablefile
+  for (i in 1:length(tablefileVector)){
+    fastloadFile <- tablefileVector[i]
+    print(fastloadFile)
+    fastloadCommand <- paste("wdb-fastload -d",dbname,"-u",user,"-h",host, " --only-groups <", fastloadFile)
+    cat("system command",fastloadCommand,"\n")
+    result <- system(fastloadCommand)
+    if (result !=0){
+      cat("system command",fastloadCommand,"failed.\n")
+    }
+    fastloadCommand <- paste("wdb-fastload -d",dbname,"-u",user,"-h",host, "<", fastloadFile)
+    cat("system command",fastloadCommand,"\n")
+    result <- system(fastloadCommand)
+    if (result !=0){
+      cat("system command",fastloadCommand,"failed.\n")
+    }
+
+
+  }
+  
+
+}
