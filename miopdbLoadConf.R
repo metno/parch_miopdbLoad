@@ -18,7 +18,8 @@ namespace <- "88,42,88"
 #command to log onto sqlplus and run sql.ctl
 sqlpluscommand <- "sqlplus64 -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
 #sqlpluscommand <- "/opt/instantclient_11_2/sqlplus -s verif/verif@miopdb @ sql.ctl 2>/dev/null"
-
+# which data to be exported
+miopdbwherestring <- " where aar> 2000 and aar < 2002"
 
 # directory for outfiles
 outdir <- "/disk1/data/parch/out/2012/"

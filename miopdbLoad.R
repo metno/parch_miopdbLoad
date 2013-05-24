@@ -52,8 +52,6 @@ miopdbTableOut <- function(tableName){
  }
   tableOutputFile <- createTableSqlFile(tableName)
  # create an sql file, sql.ctl for downloading table to file tableOutputFile
-  headerFile<- paste(tableName,".head",sep="")
-  dataFile <- paste(tableName,".dat",sep="")
   # log onto miopdb and execute the command
   cat (sqlpluscommand,"\n")
   result <- system(sqlpluscommand)
@@ -322,8 +320,8 @@ createTableSqlFile <- function(tableName){
 createTableQuery <- function(tableName){
   if (missing(tableName)) 
         stop(" ==>  table name(s)  not specified.")
-  tableQuery <- paste("select * from verifop.",tableName," where aar < 2013;\n",sep="")
-  #print(tableQuery)
+  tableQuery <- paste("select * from verifop.",tableName," ",miopdbwherestring,";\n",sep="")
+  print(tableQuery)
   return(tableQuery)
 }
 
